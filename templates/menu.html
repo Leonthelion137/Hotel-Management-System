@@ -1,0 +1,474 @@
+{% if user.is_authenticated %} </br>
+  {% if user.role == 'worker' %} </br>
+  {% include "accounts/worker/worker-head.html" %} </br>
+  {% elif user.role == 'customer' %} 
+  {%include "header.html" %} 
+  {% elif user.role == 'admin' %}
+
+  {% else %} 
+  {% include "header.html" %} 
+  {% endif %}
+{% else %}
+{% include "header.html" %}
+{% endif %}
+
+{% if user.is_authenticated %} 
+{% if user.role == 'worker' %} 
+{% elif user.role == 'admin' %}
+
+{% else %}  
+  <div class="carousel">
+  <div class="slides">
+    <div class="slide active">
+      <img class="menu_img" src="https://i.pinimg.com/736x/93/52/81/935281d0e6eb402f7f6b0c0040a8249b.jpg" alt="">
+      <div class="caption">
+        <div class="caption_head">Pancakes</div> 
+    <div class="caption_subhead">Fluffy pancakes with syrup</div>
+    <button class="caption-btn">Book Now</button>
+    </div>
+    </div>
+    <div class="slide">
+      <img class="menu_img" src="https://i.pinimg.com/736x/65/a8/39/65a8397011807242a0807a34fba70a4e.jpg" alt="">
+      <div class="caption">
+        <div class="caption_head">Burger</div> 
+    <div class="caption_subhead">Beef burger with fries</div>
+    <button class="caption-btn">Order Now</button>
+    </div>
+    </div>
+    <div class="slide">
+      <img class="menu_img" src="https://i.pinimg.com/1200x/1d/e8/b7/1de8b7f68adda0c2c53f4bd5bcd9cafa.jpg" alt="">
+      <div class="caption">
+        <div class="caption_head">Grilled Fish</div> 
+    <div class="caption_subhead">Grilled fish with salad</div>
+    <button class="caption-btn">Order Now</button>
+    </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <span id="prev">&#10094;</span>
+    <span id="next">&#10095;</span>
+  </div>
+
+  <div class="dots">
+    <span class="dot active"></span>
+    <span class="dot"></span>
+    <span class="dot"></span>
+  </div>
+</div>
+</div>
+ {% endif %} {% endif %}
+
+
+<div class="menu_container">
+  <h1>Hotel Menu</h1>
+
+  <!-- Categories -->
+  <div class="top-bar">
+    <input type="text" id="menuSearchInput" placeholder="Search Menu..." />
+    <div id="menuCategories"></div>
+  </div>
+
+  <div id="menu-container"></div>
+  <div id="menu-pagination"></div>
+</div>
+
+<!-- Item Modal -->
+<div id="item-modal" class="modal">
+  <div class="modal-content">
+    <span id="modal-close" style="cursor: pointer; float: right">&times;</span>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<!-- Order Confirmation Modal -->
+<div id="order-modal" class="modal">
+  <div class="modal-content">
+    <h3>Confirm Your Order</h3>
+    <img
+      id="order-modal-img"
+      src=""
+      alt=""
+      style="
+        width: 100%;
+        max-height: 200px;
+        object-fit: cover;
+        border-radius: 10px;
+        margin-bottom: 10px;
+      "
+    />
+    <p id="order-modal-text"></p>
+    <div class="quantity-control" style="margin: 10px 0">
+      <button id="decrease-qty" style="padding: 5px 10px">-</button>
+      <span id="order-qty" style="margin: 0 10px; font-weight: bold">1</span>
+      <button id="increase-qty" style="padding: 5px 10px">+</button>
+    </div>
+    <button id="confirm-order-btn">Confirm</button>
+    <button id="cancel-order-btn">Cancel</button>
+  </div>
+</div>
+
+<style>
+  div#order-modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+  }
+  .modal-box {
+    background-color: var(--primary-color);
+    margin: 5% auto;
+    padding: 40px;
+    border-radius: 15px;
+    width: 30%;
+    max-width: 500px;
+    position: relative;
+    animation: modalSlideIn 0.3s ease;
+  }
+  button#increase-qty,
+  button#decrease-qty {
+    border: none;
+    background-color: var(--secondary-color);
+    border-radius: 4px;
+    color: var(--white);
+  }
+  button#confirm-order-btn,
+  button#cancel-order-btn {
+    padding: 10px 20px;
+    margin: 10px 5px 0 0;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+  }
+  button#confirm-order-btn {
+    background-color: var(--f-color);
+    color: var(--text-dark);
+  }
+  button#cancel-order-btn {
+    background-color: var(--secondary-color);
+    color: var(--white);
+  }
+</style>
+
+<script>
+  let menuItems = [];
+  let isLoggedIn = false;
+
+  const menuContainer = document.getElementById("menu-container");
+  const menuPagination = document.getElementById("menu-pagination");
+  const menuCategoriesWrap = document.getElementById("menuCategories"); // wrapper (event delegation)
+  const menuSearchInput = document.getElementById("menuSearchInput");
+
+  const modal = document.getElementById("item-modal");
+  const modalContent = document.getElementById("modal-content");
+  const modalClose = document.getElementById("modal-close");
+
+  const orderModal = document.getElementById("order-modal");
+  const orderModalText = document.getElementById("order-modal-text");
+  const orderModalImg = document.getElementById("order-modal-img");
+  const confirmOrderBtn = document.getElementById("confirm-order-btn");
+  const cancelOrderBtn = document.getElementById("cancel-order-btn");
+  const qtyDisplay = document.getElementById("order-qty");
+  const increaseQtyBtn = document.getElementById("increase-qty");
+  const decreaseQtyBtn = document.getElementById("decrease-qty");
+
+  let selectedItemId = null;
+  let selectedQty = 1;
+
+  let menuPage = 1;
+  const menuItemsPerPage = 10;
+  let menuCurrentCategory = "all"; // 'all' or slug
+
+  /** Normalize category: lowercase, trimmed, slug (letters+digits+hyphen) */
+  function slugifyCategory(val) {
+    return (
+      (val || "")
+        .toString()
+        .trim()
+        .toLowerCase()
+        .normalize("NFKD")
+        .replace(/[\u0300-\u036f]/g, "") // strip accents
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "") || "uncategorized"
+    );
+  }
+
+  // Render menu items
+  function renderMenuItems(items) {
+    menuContainer.innerHTML = "";
+    const start = (menuPage - 1) * menuItemsPerPage;
+    const paginated = items.slice(start, start + menuItemsPerPage);
+
+    paginated.forEach((item) => {
+      menuContainer.innerHTML += `
+        <div class="menu-item ${item._cat}" data-id="${item.id}">
+          <img src="${item.img}" alt="${item.name}">
+          <h3>${item.name}</h3>
+          <p>${item.desc}</p>
+          <div class="price">$${item.price}</div>
+          ${
+            isLoggedIn
+              ? `<button class="order-btn" data-id="${item.id}">Order Now</button>`
+              : ``
+          }
+        </div>
+      `;
+    });
+
+    attachOrderListeners();
+    attachModalListeners();
+  }
+
+  // Build category buttons dynamically from items (plus All)
+
+  function renderCategoryButtons(items) {
+    const categories = Array.from(
+      new Set(items.map((i) => slugifyCategory(i.category)))
+    );
+    const container = document.getElementById("menuCategories");
+    container.innerHTML = `<button class="menu-category active" data-filter="all">All</button>`;
+    categories.forEach((cat) => {
+      container.innerHTML += `<button class="menu-category" data-filter="${cat}">${cat.replace(
+        /-/g,
+        " "
+      )}</button>`;
+    });
+  }
+
+  function renderCategoriesFromItems() {
+    const catLabelBySlug = {};
+    for (const it of menuItems) {
+      if (!catLabelBySlug[it._cat])
+        catLabelBySlug[it._cat] = it.category || "Uncategorized";
+    }
+    const slugs = Object.keys(catLabelBySlug).sort();
+
+    menuCategoriesWrap.innerHTML =
+      `<button class="menu-category ${
+        menuCurrentCategory === "all" ? "active" : ""
+      }" data-filter="all">All</button>` +
+      slugs
+        .map(
+          (slug) =>
+            `<button class="menu-category ${
+              menuCurrentCategory === slug ? "active" : ""
+            }" data-filter="${slug}">${catLabelBySlug[slug]}</button>`
+        )
+        .join("");
+  }
+
+  // Show confirmation modal
+  function showOrderModal(itemId) {
+    selectedItemId = itemId;
+    selectedQty = 1;
+    qtyDisplay.textContent = selectedQty;
+    const item = menuItems.find((i) => i.id == itemId);
+    if (item) {
+      orderModalImg.src = item.img;
+      orderModalText.textContent = `Do you want to order "${item.name}" for $${item.price} each?`;
+      orderModal.style.display = "block";
+    }
+  }
+
+  // Attach listeners for "Order Now"
+  function attachOrderListeners() {
+    document.querySelectorAll(".order-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const itemId = btn.getAttribute("data-id");
+        showOrderModal(itemId);
+      });
+    });
+  }
+
+  // Attach modal listeners
+  function attachModalListeners() {
+    document.querySelectorAll(".menu-item").forEach((el) => {
+      el.addEventListener("click", () => {
+        const id = el.getAttribute("data-id");
+        const item = menuItems.find((i) => i.id == id);
+        if (item) {
+          modalContent.innerHTML = `
+            <h2>${item.name}</h2>
+            <img src="${item.img}" alt="${
+            item.name
+          }" style="width:100%; height:auto;">
+            <p>${item.desc}</p>
+            <div class="price">$${item.price}</div>
+            ${
+              isLoggedIn
+                ? `<button id="modal-order-btn" data-id="${item.id}">Order Now</button>`
+                : `<p><a href="/login/">Login</a> to order</p>`
+            }
+          `;
+          modal.style.display = "block";
+
+          const orderBtn = document.getElementById("modal-order-btn");
+          if (orderBtn) {
+            orderBtn.addEventListener("click", () => {
+              showOrderModal(item.id);
+            });
+          }
+        }
+      });
+    });
+  }
+
+  // Place order helper
+  function placeOrder(itemId, quantity) {
+    fetch("/api/place-order/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken"),
+      },
+      body: JSON.stringify({ item_id: itemId, quantity: quantity }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "success") {
+          alert("Order placed!");
+        } else {
+          alert("Error: " + (data.message || "Something went wrong"));
+        }
+      });
+  }
+
+  // Quantity controls
+  increaseQtyBtn.addEventListener("click", () => {
+    selectedQty++;
+    qtyDisplay.textContent = selectedQty;
+  });
+  decreaseQtyBtn.addEventListener("click", () => {
+    if (selectedQty > 1) {
+      selectedQty--;
+      qtyDisplay.textContent = selectedQty;
+    }
+  });
+
+  // Pagination
+  function renderMenuPagination(items) {
+    menuPagination.innerHTML = "";
+    const pageCount = Math.ceil(items.length / menuItemsPerPage);
+
+    if (menuPage > 1) {
+      menuPagination.innerHTML += `<button onclick="goToMenuPage(${
+        menuPage - 1
+      })">&lt;</button>`;
+    }
+    for (let i = 1; i <= pageCount; i++) {
+      menuPagination.innerHTML += `<button class="${
+        i === menuPage ? "active" : ""
+      }" onclick="goToMenuPage(${i})">${i}</button>`;
+    }
+    if (menuPage < pageCount) {
+      menuPagination.innerHTML += `<button onclick="goToMenuPage(${
+        menuPage + 1
+      })">&gt;</button>`;
+    }
+  }
+
+  function goToMenuPage(page) {
+    menuPage = page;
+    const filtered = filterMenu(menuCurrentCategory, menuSearchInput.value);
+    renderMenuItems(filtered);
+    renderMenuPagination(filtered);
+  }
+
+  // Filter + Search (uses normalized categories)
+  function filterMenu(category, search = "") {
+    const cat = category === "all" ? "all" : slugifyCategory(category);
+    let filtered = menuItems.filter(
+      (item) => cat === "all" || item._cat === cat
+    );
+
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(
+        (item) =>
+          (item.name || "").toLowerCase().includes(q) ||
+          (item.desc || "").toLowerCase().includes(q)
+      );
+    }
+    return filtered;
+  }
+
+  // Category click handling via EVENT DELEGATION
+  menuCategoriesWrap.addEventListener("click", (e) => {
+    const btn = e.target.closest(".menu-category");
+    if (!btn) return;
+    // set active
+    [...menuCategoriesWrap.querySelectorAll(".menu-category")].forEach((b) =>
+      b.classList.remove("active")
+    );
+    btn.classList.add("active");
+
+    // update category + re-render
+    menuCurrentCategory = btn.dataset.filter; // already slug or 'all'
+    menuPage = 1;
+    const filtered = filterMenu(menuCurrentCategory, menuSearchInput.value);
+    renderMenuItems(filtered);
+    renderMenuPagination(filtered);
+  });
+
+  // Search input
+  menuSearchInput.addEventListener("input", () => {
+    menuPage = 1;
+    const filtered = filterMenu(menuCurrentCategory, menuSearchInput.value);
+    renderMenuItems(filtered);
+    renderMenuPagination(filtered);
+  });
+
+  // Close modals
+  modalClose.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+  cancelOrderBtn.addEventListener("click", () => {
+    orderModal.style.display = "none";
+  });
+  confirmOrderBtn.addEventListener("click", () => {
+    if (selectedItemId) {
+      placeOrder(selectedItemId, selectedQty);
+      orderModal.style.display = "none";
+    }
+  });
+
+  // CSRF token helper
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === name + "=") {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  fetch("/api/menu-items/")
+    .then((response) => response.json())
+    .then((data) => {
+      isLoggedIn = data.is_logged_in;
+      menuItems = data.items.map((item) => ({
+        ...item,
+        _cat: slugifyCategory(item.category),
+      }));
+      renderCategoriesFromItems(); // ✅ builds proper buttons
+      const filtered = filterMenu(menuCurrentCategory, menuSearchInput.value);
+      renderMenuItems(filtered);
+      renderMenuPagination(filtered);
+    });
+</script>
+
+{% include "footer.html" %}

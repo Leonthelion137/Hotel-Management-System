@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {% load static %}
+    <meta charset="UTF-8" />
+    <title>Signup Failed</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+  </head>
+  <body>
+    <div class="modal-content">
+      <h2>Signup Failed</h2>
+      <p>{{ error }}</p>
+      <button onclick="window.history.back()">Try Again</button>
+    </div>
+  </body>
+</html>

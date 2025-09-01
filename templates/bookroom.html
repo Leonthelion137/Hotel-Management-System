@@ -1,0 +1,174 @@
+{% if user.is_authenticated %} </br>
+  {% if user.role == 'worker' %} </br>
+  {% include "accounts/worker/worker-head.html" %} </br>
+  {% elif user.role == 'customer' %} 
+  {%include "header.html" %} 
+  {% elif user.role == 'admin' %}
+
+  {% else %} 
+  {% include "header.html" %} 
+  {% endif %}
+{% else %}
+{% include "header.html" %}
+{% endif %}
+
+
+
+{% if user.is_authenticated %} </br>
+{% if user.role == 'worker' %} 
+{% elif user.role == 'admin' %}
+</br>
+{% else %}  
+  <div class="carousel">
+  <div class="slides">
+    <div class="slide active">
+      <img class="menu_img" src="https://i.pinimg.com/736x/93/52/81/935281d0e6eb402f7f6b0c0040a8249b.jpg" alt="">
+      <div class="caption">
+        <div class="caption_head">Pancakes</div> 
+    <div class="caption_subhead">Fluffy pancakes with syrup</div>
+    </div>
+    </div>
+    <div class="slide">
+      <img class="menu_img" src="https://i.pinimg.com/736x/65/a8/39/65a8397011807242a0807a34fba70a4e.jpg" alt="">
+      <div class="caption">
+        <div class="caption_head">Burger</div> 
+    <div class="caption_subhead">Beef burger with fries</div>
+    </div>
+    </div>
+    <div class="slide">
+      <img class="menu_img" src="https://i.pinimg.com/1200x/1d/e8/b7/1de8b7f68adda0c2c53f4bd5bcd9cafa.jpg" alt="">
+      <div class="caption">
+        <div class="caption_head">Grilled Fish</div> 
+    <div class="caption_subhead">Grilled fish with salad</div>
+    </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <span id="prev">&#10094;</span>
+    <span id="next">&#10095;</span>
+  </div>
+
+  <div class="dots">
+    <span class="dot active"></span>
+    <span class="dot"></span>
+    <span class="dot"></span>
+  </div>
+</div>
+</div>
+ {% endif %} {% endif %}
+
+
+
+
+ <section class="booking">
+      <div class="section__container booking__container">
+        <form action="/">
+          <div class="input__group">
+            <label for="arrival">Arrival Date</label>
+            <input type="text" placeholder="Your Arrival Date" name="date" onfocus="(this.type='date')" onblur="if(!this.value) this.type='text' " />
+          </div>
+          <div class="input__group">
+            <label for="departure">Departure Date</label>
+            <input type="text" placeholder="Your Departure Date" name="date" onfocus="(this.type='date')" onblur="if(!this.value) this.type='text' " />
+          </div>
+          <div class="input__group">
+            <label for="guests">Guests</label>
+            <input type="number" placeholder="No Of Guests" />
+          </div>
+          <button class="btn">Check Availability</button>
+        </form>
+      </div>
+    </section>
+
+
+    
+<div class="menu_container">
+  <h1>Room Menu</h1>
+
+  <!-- Categories -->
+  <div class="top-bar">
+  <input type="text" id="roomSearchInput" placeholder="Search Rooms...">
+ <div id="roomCategories">
+  <button class="room-category active" data-filter="all">All</button>
+  <button class="room-category" data-filter="normal">Normal</button>
+  <button class="room-category" data-filter="elite">Elite</button>
+  <button class="room-category" data-filter="deluxe">Deluxe</button>
+</div>
+  </div>
+
+<!-- Room Grid -->
+<div id="booking-container"></div>
+<div id="room-pagination"></div>
+</div>
+{% include "footer.html" %}
+<div id="bookingModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeBookingModal()">&times;</span>
+    <div class="auth-container">
+      <div class="model_grid1">
+      <h2 id="modalRoomName">Room Name</h2>
+      <img id="modalRoomImage" src="" alt="Room Image" style="width:100%; border-radius:10px; margin-bottom:1rem;">
+      </div>
+<div class="model_grid2">
+      <p id="modalRoomDesc"></p>
+      <p><strong>Price:</strong> <span id="modalRoomPrice"></span></p>
+
+      <div class="form-group">
+        <label>Arrival Date</label>
+        <input type="datetime-local" id="arrivalDate" required>
+      </div>
+      <div class="form-group">
+        <label>Departure Date</label>
+        <input type="datetime-local" id="departureDate" required>
+      </div>
+
+      <script>
+  function formatDateTime(date) {
+    // Force time to 06:00
+    date.setHours(6, 0, 0, 0);
+    return date.toISOString().slice(0,16); // YYYY-MM-DDTHH:MM
+  }
+
+  const today = new Date();
+
+  // Arrival = today at 06:00
+  document.getElementById("arrivalDate").value = formatDateTime(new Date(today));
+
+  // Departure = tomorrow at 06:00
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  document.getElementById("departureDate").value = formatDateTime(tomorrow);
+</script>
+
+      <div class="form-group">
+        <label>Number of Guests</label>
+        <input type="number" id="numGuests" required min="1" value="1">
+      </div>
+      <div class="form-group-checkbox">
+        <input type="checkbox" id="termsCheckbox" required>
+        <label for="termsCheckbox">I agree to the <a href="#">terms and conditions</a></label>
+      </div>
+
+      <button class="auth-btn" onclick="confirmBooking()">Confirm Booking</button>
+    </div>
+  </div>
+</div>
+<style>
+  .modal-content {
+    height: -webkit-fill-available;
+  }
+  .auth-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 10px;
+  }
+img#modalRoomImage {
+    border: none;
+    height: fit-content;
+}
+</style>
+<script src="/static/javascript/bookroom.js"></script>
+<br><br>
+

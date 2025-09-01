@@ -1,0 +1,66 @@
+<h2>Your Bookings</h2>
+<div id="bookingList">
+  <h2>My Bookings</h2>
+  {% for booking in bookings %}
+  <div class="booking-card">
+    <h3>{{ booking.room.name }}</h3>
+    <p>Check-in: {{ booking.check_in }}</p>
+    <p>Check-out: {{ booking.check_out }}</p>
+    <p>Status: {{ booking.status }}</p>
+  </div>
+  {% empty %}
+  <p>You haven’t booked any rooms yet.</p>
+  {% endfor %}
+  <a href="{% url 'my_bookings' %}">My Bookings</a>
+</div>
+
+<script>
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.startsWith(name + "=")) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  function cancelBooking(bookingId, checkInTimeStr) {
+    const now = new Date();
+    const checkInTime = new Date(checkInTimeStr);
+    const timeDiff = checkInTime - now;
+    const hoursDiff = timeDiff / (1000 * 60 * 60);
+
+    let warningMsg = "Are you sure you want to cancel this booking?";
+    if (hoursDiff <= 48 && hoursDiff > 0) {
+      warningMsg =
+        "⚠️ Cancelling within 2 days of arrival: 10% will not be refunded.\n\nProceed?";
+    } else if (hoursDiff <= 0) {
+      warningMsg =
+        "⚠️ Cancelling during stay: 15% will be deducted.\n\nProceed?";
+    }
+
+    if (!confirm(warningMsg)) return;
+
+    fetch(`/rooms/api/cancel/${bookingId}/`, {
+      method: "DELETE",
+      headers: {
+        "X-CSRFToken": getCookie("csrftoken"),
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        alert(data.message || data.error);
+        location.reload();
+      })
+      .catch((err) => {
+        console.error("Cancellation error:", err);
+        alert("Something went wrong.");
+      });
+  }
+</script>

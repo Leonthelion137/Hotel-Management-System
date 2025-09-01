@@ -1,0 +1,27 @@
+{% include "header.html" %}
+
+<section id="home" class="hero">
+  <div class="hero-content">
+    <h1>Welcome to Grand Hotel</h1>
+    <h1 style="text-transform: uppercase">{{ user.username }}</h1>
+    <p>Experience luxury and comfort like never before</p>
+    <button class="cta-btn" onclick="scrollToSection('booking')">
+      Book Your Stay
+    </button>
+  </div>
+  <div class="hero-overlay"></div>
+</section>
+<div class="booking-grid">
+  {% include "hotel/my_bookings.html" with bookings=bookings %}
+</div>
+<div class="my-menu">{% include 'menu/my_menu.html' %}</div>
+{% include "footer.html" %}
+
+<style>
+  .booking-grid {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(4, 1fr);
+    justify-items: center;
+  }
+</style>

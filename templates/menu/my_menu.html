@@ -1,0 +1,22 @@
+<h1>Customer Dashboard</h1>
+<h2>Your Food Orders</h2>
+{% if food_orders %} {% for order in food_orders %}
+<div class="order-card">
+  <h4>{{ order.menu_item.name }}</h4>
+  <p>Quantity: {{ order.quantity }}</p>
+  <p>Ordered at: {{ order.ordered_at|date:"M d, H:i" }}</p>
+  <p>
+    Status: {% if order.is_fully_confirmed %} ✅ Delivered & Confirmed {% elif
+    order.is_delivered %} 🧾 Delivered (Waiting for confirmation) {% else %} 🍽️
+    Preparing {% endif %}
+  </p>
+  {% if order.is_delivered and not order.customer_confirmed %}
+  <form method="POST" action="{% url 'confirm_food_delivery' order.id %}">
+    {% csrf_token %}
+    <button type="submit">Confirm Delivery</button>
+  </form>
+  {% endif %}
+</div>
+{% endfor %} {% else %}
+<p>No food orders yet.</p>
+{% endif %}

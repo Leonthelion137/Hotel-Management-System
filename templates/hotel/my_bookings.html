@@ -1,0 +1,223 @@
+{% for booking in bookings %}
+<link rel="stylesheet" href="//static/css/styles.css" />
+
+
+<div class="booking-item">
+  <h3>{{ booking.room.name }}</h3>
+  {% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+      <li class="{{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+  <div class="booking-image">
+    {% if booking.room.image %}
+      <img src="{{ booking.room.image.url }}" alt="{{ booking.room.name }}" loading="lazy" />
+    {% else %}
+      <img src="/static/images/default-room.jpg" alt="Default Room" loading="lazy" />
+    {% endif %}
+  </div>
+  <p>Check-in: {{ booking.check_in }}</p>
+  <p>Check-out: {{ booking.check_out }}</p>
+  <p>Guests: {{ booking.guests }}</p>
+  <div class="booking-actions">
+    <button class="add-time-btn" onclick="openModal('{{ booking.id }}')">
+      Add Time
+    </button>
+    <form
+      method="POST"
+      action="{% url 'delete_booking' booking.id %}"
+      style="display: inline"
+    >
+      {% csrf_token %}
+      <button type="submit" class="delete-btn">Delete Room</button>
+    </form>
+  </div>
+</div>
+{% empty %}
+<p>No bookings found. <a href="{% url 'bookroom' %}">Book a room now</a>.</p>
+{% endfor %}
+
+<div id="addTimeModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <h2>Add Time</h2>
+    <form method="POST" action="{% url 'customer_dashboard' %}">
+      {% csrf_token %}
+      <input type="hidden" name="booking_id" id="modalBookingId" />
+      <label for="new_check_in">New Check-in:</label></br>
+      <input type="datetime-local" name="new_check_in" required /></br>
+      <label for="new_check_out">New Check-out:</label></br>
+      <input type="datetime-local" name="new_check_out" required /></br>
+      {% if modal_error %}
+  <ul class="messages">
+    <li class="error">{{ modal_error }}</li>
+  </ul>
+{% endif %}
+
+      <button type="submit">Submit</button>
+    </form>
+  </div>
+</div>
+
+<style>
+  .booking-item {
+    background-color: aliceblue;
+    padding: 10px;
+    margin: 10px 0;
+    width: 300px;
+    justify-items: center;
+    border-radius: 30px;
+  }
+  .messages {
+  list-style: none;
+  padding: 0;
+}
+.messages li {
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+.messages li.success {
+  background-color: #d4edda;
+  color: #155724;
+}
+.messages li.error {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+  .booking-image {
+    width: 200px;
+    height: 200px;
+    overflow: hidden;
+  }
+
+  .booking-item img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    position: relative;
+    top: -93px;
+  }
+
+  .booking-item h3 {
+    margin: 0 0 10px;
+    font-size: 1.7em;
+    text-transform: uppercase;
+  }
+  .booking-item p {
+    margin: 5px 0;
+    font-size: 0.9em;
+  }
+  .booking-item a {
+    color: #007bff;
+    text-decoration: none;
+  }
+
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  .modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 20px;
+    width: 300px;
+    border-radius: 10px;
+        font-family: sans-serif;
+  }
+
+  .close {
+    float: right;
+    font-size: 1.5em;
+    cursor: pointer;
+    color: black;
+  }
+
+  .booking-actions {
+    margin-top: 10px;
+  }
+  label {
+    font-size: 1.4em;
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+
+h2 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    margin-top: 0px;
+}
+input[type="datetime-local"] {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    width: 93%;
+    height: 30px;
+    border-radius: 6px;
+    padding: 3%;
+}
+button {
+    padding: 10px;
+    color: white;
+    background-color: #4b4b4b;
+    /* border: cyan; */
+    border-radius: 5px;
+}
+  .add-time-btn,
+  .delete-btn {
+    padding: 6px 12px;
+    margin-right: 5px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .add-time-btn {
+    background-color: #28a745;
+    color: white;
+  }
+
+  .delete-btn {
+    background-color: #dc3545;
+    color: white;
+  }
+</style>
+
+<script>
+  function openModal(bookingId) {
+    document.getElementById("addTimeModal").style.display = "block";
+    document.getElementById("modalBookingId").value = bookingId;
+  }
+
+  function closeModal() {
+    document.getElementById("addTimeModal").style.display = "none";
+  }
+
+  window.onclick = function (event) {
+    const modal = document.getElementById("addTimeModal");
+    if (event.target == modal) {
+      closeModal();
+    }
+  };
+
+  
+
+  
+
+</script>
+
+{% if modal_open and booking_id %}
+    window.onload = function() {
+      openModal("{{ booking_id }}");
+    };
+  {% endif %}
+
+  
